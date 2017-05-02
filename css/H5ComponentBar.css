@@ -9,10 +9,7 @@ width: 50px;
 color: #000;
 float: left;
 }
-/*.h5_component_bar .rate{
-height: 15px;
-background-color: red;
-}*/
+
 .h5_component_bar .rate{
 height: 15px;
 margin-left: 10px;
@@ -46,11 +43,11 @@ position: relative;
   width:0%
 }
 .h5_component_bar_load  .per{
-  -webkit-transition: all 1s 1s;
+transition: all 1s 1s;
   opacity: 1;
 
 }
 .h5_component_bar_leave  .per{
--webkit-transition: all 1s;
+transition: all 1s;
   opacity: 0;
 }

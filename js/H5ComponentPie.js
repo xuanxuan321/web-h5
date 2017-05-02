@@ -91,6 +91,7 @@ var H5ComponentPie=function(name,cfg){
     ctx.beginPath();
     ctx.moveTo(r,r);
     sAngle=3/2*Math.PI;
+    //yi开始先画一个大圆把他全部遮住
     if(per<=0){
         ctx.arc(r,r,r,0,2*Math.PI);
     }else{

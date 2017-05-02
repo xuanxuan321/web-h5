@@ -48,11 +48,11 @@ position: relative;
   height:0;
 }
 .h5_component_bar_v_load  .per{
-  -webkit-transition: all 1s 1s;
+  transition: all 1s 1s;
   opacity: 1;
 
 }
 .h5_component_bar_v_leave  .per{
--webkit-transition: all 1s;
+transition: all 1s;
   opacity: 0;
 }
