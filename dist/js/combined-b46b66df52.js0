@@ -1,0 +1,651 @@
+/* 基本图文组件对象 */
+var H5ComponentBase=function(name,cfg){
+  var cfg=cfg||{};
+  var cls=" h5_component_"+cfg.type;
+  var  id=('h5_c_'+Math.random()).replace('.','_')
+  var component=$("<div class='h5_component "+cls+"  h5_component_name_"+name+"' id='"+id+"'>");
+
+  cfg.text&&component.text(cfg.text);
+
+  cfg.width&&component.width(cfg.width/2);
+  cfg.height&&component.height(cfg.height/2);
+  cfg.css&&component.css(cfg.css);
+  cfg.bg&&component.css('background-image','url('+cfg.bg+')');
+  if(cfg.center){
+
+    component.css({
+      'left':'50%',
+      'marginLeft':(cfg.width/4 * -1)+'px'
+    })//千万别把'marginLeft'写成margin-left
+  }
+  if(typeof cfg.onclick==='function'){
+    component.on('click',cfg.onclick)
+  }
+
+  component.on('afterLoad',function(){
+      setTimeout(function(){
+        component.addClass(cls+'_load').removeClass(cls+'_leave');
+        cfg.animationIn&&component.animate(cfg.animationIn)
+      return false;//这一句是为了防止事件冒泡，把trigger改成triggerHandler也可以解决这个问题
+    },cfg.delay||0)
+
+    });
+  component.on('onLeave',function(){
+     component.addClass(cls+'_leave').removeClass(cls+'_load');
+     cfg.animationOut&&component.animate(cfg.animationOut)
+    return false;
+  });
+
+
+  return component;
+}
+
+/* 垂直柱图组件对象 */
+
+var H5ComponentBar_v=function(name,cfg){
+   var component=new H5ComponentBase(name,cfg) ;
+     var h=cfg.height;
+   $.each(cfg.data,function(idx,item){
+     var line=$("<div class='line'>");
+     var name=$("<div class='name'>");
+     var rate=$("<div class='rate'>");
+     var per=$("<div class='per'>");
+     var  bgStyle='';
+     if(item[2]){
+       bgStyle='style="background-color:'+item[2]+' "';
+
+     }
+     line.css('padding-top',(1-item[1])*h/4);
+     name.text(item[0]);
+     var height=item[1]*100+'%';
+     var height1=item[1]*100*0.5+'%';//这里再乘以一个0.5，是为了让rate的宽度的参照点为 1/2line的宽度，这样子即使width为100%，也不会把line给撑破了
+     rate.html("<div class='bg'" +bgStyle+"></div>");
+
+     rate.css('height',height1);
+     per.text(height);
+     line.append(per).append(rate).append(name);
+     component.append(line);
+   })
+   return component;
+}
+
+/* 柱图组件对象 */
+
+
+var H5ComponentBar=function(name,cfg){
+   var component=new H5ComponentBase(name,cfg) ;
+   $.each(cfg.data,function(idx,item){
+     var line=$("<div class='line'>");
+     var name=$("<div class='name'>");
+     var rate=$("<div class='rate'>");
+     var per=$("<div class='per'>");
+     var  bgStyle='';
+     if(item[2]){
+       bgStyle='style="background-color:'+item[2]+' "';
+
+     }
+     name.text(item[0]);
+     var width=item[1]*100+'%';
+     var width1=item[1]*100*0.5+'%';//这里再乘以一个0.5，是为了让rate的宽度的参照点为 1/2line的宽度，这样子即使width为100%，也不会把line给撑破了
+     rate.html("<div class='bg'" +bgStyle+"></div>");
+
+     rate.css('width',width1);
+     per.text(width);
+     line.append(name).append(rate).append(per);
+     component.append(line);
+   })
+   return component;
+}
+
+/* 饼图组件对象 */
+
+
+var H5ComponentPie=function(name,cfg){
+  var component=new H5ComponentBase(name,cfg) ;
+  var w=cfg.width;
+  var h=cfg.height;
+  // 绘制底层 这里其实没必要绘制底层
+  // var cns=document.createElement("canvas");
+  // var step=cfg.data.length
+  // var ctx=cns.getContext('2d');
+  // cns.width=ctx.width=w;
+  // cns.height=ctx.height=h;
+  // $(cns).css('z-index',1);
+  // component.append(cns);
+  // var r=w/2;
+  // ctx.strokeStyle="#eee";
+  // ctx.fillStyle="#eee";
+  // ctx.beginPath();
+  // ctx.arc(r,r,r,0,2*Math.PI);
+  // ctx.fill();
+  // ctx.stroke();
+
+  // 绘制数据
+  var cns=document.createElement("canvas");
+  var step=cfg.data.length
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+  $(cns).css('z-index',2);
+  component.append(cns);
+  var sAngle=3/2*Math.PI;
+  var aAngle=2*Math.PI;
+  var color=['red','green','grey','blue','yellow'];
+  var  rad=0;
+  for(var i=0;i<step;i++){
+  var  item=cfg.data[i];
+    var r=w/2;
+    ctx.strokeStyle="#eee";
+    ctx.fillStyle="#eee";
+    ctx.beginPath();
+    eAngle=sAngle+aAngle*item[1];
+    ctx.moveTo(r,r);
+    ctx.arc(r,r,r,sAngle,eAngle);
+    ctx.fillStyle=item[2]||color.pop();
+    ctx.fill();
+    ctx.stroke();
+    sAngle=eAngle;
+    //插入数据
+    var text=$("<div class='text'>")
+    text.text(item[0]);
+    component.append(text);
+    var rate=$("<div class='rate'>")
+    rate.text(item[1]*100+'%');
+    text.append(rate);
+
+       rad+=2*Math.PI*item[1]/2;
+    var  x=r+r*Math.cos(rad-1/2*Math.PI);
+    var  y=r+r*Math.sin(rad-1/2*Math.PI);
+    ctx.beginPath();
+    ctx.strokeStyle='black';
+    ctx.stroke();
+    if(x>w/2){
+    text.css('left',x/2+10);
+   }else{
+    text.css('right',(w-x)/2+10);
+   }
+   if(y>h/2){
+   text.css('top',y/2+10);
+  }else{
+   text.css('bottom',(h-y)/2+10);
+  }
+  rad+=2*Math.PI*item[1]/2;
+
+    // console.log(item[1]);
+  }
+  //绘制遮罩层
+  var cns=document.createElement("canvas");
+  var step=cfg.data.length
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+  $(cns).css('z-index',3);// 不能写成cns.css('width',3);除非cns是这样创建的  cns=$("<canvas>")
+  component.append(cns);
+  var r=w/2;
+  ctx.strokeStyle="#eee";
+  ctx.fillStyle="#eee";
+
+  var  draw=function(per){
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath();
+    ctx.moveTo(r,r);
+    sAngle=3/2*Math.PI;
+    if(per<=0){
+        ctx.arc(r,r,r,0,2*Math.PI);
+    }else{
+    ctx.arc(r,r,r,sAngle,sAngle+2*Math.PI*per,true);
+    }
+    ctx.fill();
+    ctx.stroke();
+};
+draw(0);
+// 生长动画
+component.on('afterLoad',function(){
+  var s=0;
+  for(var i=0;i<100;i++){
+    setTimeout(function(){
+      s+=0.01;
+      draw(s);
+      }
+    ,i*10+500);
+  }
+});
+
+//退场动画
+component.on('onLeave',function(){
+  var s=1;
+  for(var i=0;i<100;i++){
+    setTimeout(function(){
+      s-=0.01;
+      draw(s);
+    },i*10);
+  }
+});
+  return component;
+}
+
+/* 散点图表组件对象 */
+
+var H5ComponentPoint=function(name,cfg){
+   var component=new H5ComponentBase(name,cfg) ;
+   var base=cfg.data[0][1];//第一个圆撑满整个容器，其他的圆照着他按比例缩放
+   $.each(cfg.data,function(idx,item){
+     var point=$('<div class="point point_'+idx+' ">');
+     component.append(point);
+     point.css('z-index',3);
+     var per=(item[1]/base*100)+'%';
+     var name=$('<div class="name">'+item[0]+"</div>");
+     var rate=$('<div class="per">'+(item[1]*100)+'%'+"</div>");
+     name.append(rate);
+     point.append(name);
+     point.width(per).height(per);
+     if(item[2]){
+       point.css('background-color',item[2]);
+     };
+     if(item[3]!==undefined&&item[4]!==undefined){
+       point.css('left',item[3]).css('top',item[4]);
+     }
+   });
+   //动画层的绘制
+   $.each(cfg.data,function(idx,item){
+     var point=$('<div class="point point_'+idx+' ">');
+     component.append(point);
+     var per=(item[1]/base*100)+'%';
+
+     point.width(per).height(per);
+     if(item[2]){
+       point.css('background-color',item[2]);
+
+       point.addClass('shine');
+     };
+     if(item[3]!==undefined&&item[4]!==undefined){
+       point.css('left',item[3]).css('top',item[4]);
+     }
+   });
+   return component;
+}
+
+/* 柱图组件对象 */
+
+var H5ComponentPolyline=function(name,cfg){
+  var  a=new Array();//用来控制说明文字ABCDE的输出次数
+  var component=new H5ComponentBase(name,cfg) ;
+  var w=cfg.width;
+  var h=cfg.height;
+  var cns=document.createElement("canvas");
+
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+  component.append(cns);
+  var step=10;
+  ctx.beginPath();//此句可省略
+    //画表格
+
+  ctx.lineWidth=1;
+  ctx.strokeStyle="#AAAAA";
+  for(var i=0; i<step+1;i++){
+    var y=h/step*i;
+    ctx.moveTo(0,y);
+    ctx.lineTo(w,y);
+  }
+  step=cfg.data.length+1;
+  for( var i=0;i<step+1;i++){
+    var x=w/step*i;
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,h);
+  }
+  ctx.stroke();
+  //绘制折线的点
+  var cns=document.createElement("canvas");
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+    component.append(cns);
+
+
+
+
+
+  //模块化画点
+  var  draw=function(per){
+    ctx.clearRect(0,0,w,h);//清空画布
+  ctx.beginPath();
+  ctx.lineWidth=3;
+  ctx.strokeStyle="#ff8878";
+
+  step=cfg.data.length+1;
+  for(var i in cfg.data){
+    ctx.beginPath();
+  var  item=cfg.data[i];
+    x=w/step*i+w/step;
+    y=h*(1-(item[1]*per));
+    ctx.arc(x,y,5,0,2*Math.PI);
+    ctx.stroke();
+    //输出下方的说明文字 ,之所以没用画布来实现，是因为这些文字是出现在画布外的
+    if(cfg.data&&a[i]!==i){//保证说明文字只会输出一次
+    a[i]=i;
+    var  text=$("<div class='text'>");
+      text.text(cfg.data[i][0]);
+      text.css('width',w/step/2).css('left',x/2-w/step/4).css('text-align','center')
+      component.append(text);
+
+    }
+  }
+  //将折线的点连线
+  ctx.moveTo(w/step,h*(1-cfg.data[0][1]*per));
+  for( var i in cfg.data){
+  var  item=cfg.data[i];
+  var  x=w/step*i+w/step;
+  var  y=h*(1-(item[1]*per));
+    ctx.lineTo(x,y);
+
+  }
+    ctx.stroke();
+    //绘制阴影
+    ctx.lineTo(x,h);
+    ctx.lineTo(w/step,h);
+    ctx.fillStyle="rgba(255,136,120,0.2)";
+    ctx.fill();
+
+    //添加数据
+    for(var i in cfg.data){
+       var item=cfg.data[i];
+    var  x=w/step*i+w/step;
+    var  y=h*(1-(item[1]*per));
+
+        ctx.fillStyle="black";
+      ctx.font="25px  Arial";
+      ctx.fillText(item[1]*100+'%',x-10,y-10)
+    }
+
+
+}
+// 生长动画
+//用setInterval也可以，但是效果没那么好，图表一出现就已经动画完成一半啦
+// component.on('afterLoad',function(){
+//   var s=0;
+//
+//   var p=  setInterval(function(){
+//       s+=0.01;
+//       draw(s);
+//       if(s>1){
+//       clearInterval(p)  ;
+//       }
+//       }
+//     ,10);
+//
+//
+// });
+//一个事件可以绑定多个处理函数，后绑定的先执行
+component.on('afterLoad',function(){
+  var s=0;
+  for(var i=0;i<100;i++){
+    setTimeout(function(){
+      s+=0.01;
+      draw(s);
+      }
+    ,i*10+500);
+
+  }
+});
+// 退场动画
+component.on('onLeave',function(){
+  var s=1;
+  for(var i=0;i<100;i++){
+    setTimeout(function(){
+      s-=0.01;
+      // debugger
+      draw(s);
+    },i*10);
+
+  }
+});
+  return component;
+}
+
+/* 雷达图组件对象 */
+
+var H5ComponentRadar=function(name,cfg){
+  var component=new H5ComponentBase(name,cfg) ;
+  var w=cfg.width;
+  var h=cfg.height;
+  var cns=document.createElement("canvas");
+  var step=cfg.data.length
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+  component.append(cns);
+  var r=w/2;
+  //计算多边形的顶点坐标,绘制底图
+  var isBlue=false;
+
+  for(var s=10;s>0;s--){
+    ctx.beginPath();
+    for(var i=0;i<step;i++){
+      var  rad=2*Math.PI/360*(360/step)*i;
+      var  x=r+r*Math.sin(rad)*(s/10);
+
+      var  y=r+r*Math.cos(rad)*(s/10);
+      ctx.lineTo(x,y);
+
+    }
+    ctx.closePath();
+      ctx.stroke();
+
+    isBlue=!isBlue;
+    ctx.fillStyle=isBlue?'#99c0ff':'white';
+    ctx.fill();
+  }
+  //绘制伞骨
+  for(var i=0;i<step;i++){
+
+    var  rad=2*Math.PI/360*(360/step)*i;
+    var  x=r+r*Math.sin(rad);
+    var  y=r+r*Math.cos(rad);
+    ctx.beginPath();
+    ctx.moveTo(r,r);
+    ctx.lineTo(x,y);
+    ctx.strokeStyle="#e0e0e0"
+    ctx.stroke();
+    //插入数据
+    var text=$("<div class='text'>");
+    text.text(cfg.data[i][0]);
+    component.append(text);
+    text.css('transition','all 1s '+i*0.1+'s');
+    if(x>w/2){
+    text.css('left',x/2+5);
+   }else{
+    text.css('right',(w-x)/2+5);
+   }
+   if(y>h/2){
+   text.css('top',y/2+5);
+  }else{
+   text.css('bottom',(h-y)/2+5);
+  }
+   text.css('opacity',0);
+  }
+
+
+  //模块化画点，绘制展示层
+  var cns=document.createElement("canvas");
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+    component.append(cns);
+  var  draw=function(per){
+    //之所以这样设置而没有用css去设置，是为了让动画结束之后自动就能出现文字，而不是去算动画的执行时间，去设置文字过渡的delay
+    if(per>=1){
+      $('.h5_component_radar').find('.text').css('opacity',1)
+    }
+    if(per<1){
+      $('.h5_component_radar').find('.text').css('opacity',0)
+    }
+    ctx.clearRect(0,0,w,h);
+   ctx.beginPath();
+    for(var i=0;i<step;i++){
+    var rate=cfg.data[i][1]*per;
+    var  rad=2*Math.PI/360*(360/step)*i;
+    var  x=r+r*Math.sin(rad)*rate;
+    var  y=r+r*Math.cos(rad)*rate;
+    ctx.strokeStyle='#ff7676'
+    ctx.lineTo(x,y);
+
+  }
+  ctx.closePath();
+  ctx.fillStyle='#ff7676'
+  ctx.fill();
+  ctx.stroke();
+};
+// 生长动画
+component.on('afterLoad',function(){
+  var s=0;
+  for(var i=0;i<100;i++){
+    setTimeout(function(){
+      s+=0.01;
+      draw(s);
+      }
+    ,i*10+500);
+  }
+});
+
+//退场动画
+component.on('onLeave',function(){
+  var s=1;
+  for(var i=0;i<100;i++){
+    setTimeout(function(){
+      s-=0.01;
+      // debugger
+      draw(s);
+    },i*10);
+  }
+});
+  return component;
+}
+
+/* 环图组件对象 */
+var H5ComponentRing=function(name,cfg){
+  var component=new H5ComponentBase(name,cfg) ;
+  var w=cfg.width;
+  var h=cfg.height;
+  //绘制底层
+  var cns=document.createElement("canvas");
+  var step=cfg.data.length
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+  $(cns).css('z-index',1);
+  component.append(cns);
+  var r=w/2;
+  ctx.strokeStyle="#eee";
+  ctx.fillStyle="#eee";
+  ctx.beginPath();
+  ctx.arc(r,r,r,0,2*Math.PI);
+  ctx.fill();
+  ctx.stroke();
+
+  //绘制数据层
+  var cns=document.createElement("canvas");
+  var step=cfg.data.length
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+  $(cns).css('z-index',2);
+  component.append(cns);
+  var sAngle=3/2*Math.PI;
+  var aAngle=2*Math.PI;
+  var color='pink'
+  var  rad=0;
+  for(var i=0;i<step;i++){
+    item=cfg.data[i];
+    var r=w/2;
+    ctx.strokeStyle="#eee";
+    ctx.fillStyle="#eee";
+    ctx.beginPath();
+    eAngle=sAngle+aAngle*item[1];
+    ctx.moveTo(r,r);
+    ctx.arc(r,r,r,sAngle,eAngle);
+    ctx.fillStyle=color;
+    ctx.fill();
+    ctx.stroke();
+    sAngle=eAngle;
+    //插入数据
+
+    // console.log(item[1]);
+  }
+  //绘制遮罩层2
+  var cns=document.createElement("canvas");
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+  $(cns).css('z-index',5);
+  component.append(cns);
+  var r=w/2;
+  ctx.strokeStyle="#eee";
+  ctx.fillStyle="white";
+  ctx.beginPath();
+  ctx.arc(r,r,r*0.8,0,2*Math.PI);
+  ctx.fill();
+  ctx.stroke();
+  //数据层
+  var cns=document.createElement("canvas");
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+  $(cns).css('z-index',1000);
+  $(cns).css('left',-w/10);
+  $(cns).addClass('tran');
+  component.append(cns);
+  var r=w/2;
+  ctx.font="35px Georgia";
+ctx.fillText(cfg.desc,r,r);
+  // 绘制遮罩层
+  var cns=document.createElement("canvas");
+  var step=cfg.data.length
+  var ctx=cns.getContext('2d');
+  cns.width=ctx.width=w;
+  cns.height=ctx.height=h;
+  $(cns).css('z-index',3);// 不能写成cns.css('width',3);除非cns是这样创建的  cns=$("<canvas>")
+  component.append(cns);
+  var r=w/2;
+  ctx.strokeStyle="#eee";
+  ctx.fillStyle="#eee";
+
+  var  draw=function(per){
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath();
+    ctx.moveTo(r,r);
+    sAngle=3/2*Math.PI;
+    if(per<=0){
+        ctx.arc(r,r,r,0,2*Math.PI);
+    }else{
+    ctx.arc(r,r,r,sAngle,sAngle+2*Math.PI*per,true);
+    }
+    ctx.fill();
+    ctx.stroke();
+};
+draw(0);
+// 生长动画
+component.on('afterLoad',function(){
+  var s=0;
+  for(var i=0;i<100;i++){
+    setTimeout(function(){
+      s+=0.01;
+      draw(s);
+      }
+    ,i*10+500);
+  }
+});
+
+//退场动画
+component.on('onLeave',function(){
+  var s=1;
+  for(var i=0;i<100;i++){
+    setTimeout(function(){
+      s-=0.01;
+      draw(s);
+    },i*10);
+  }
+});
+  return component;
+}

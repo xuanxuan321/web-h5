@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, minimum-scale=1, maximum-scale=1">
+
+    <title>2017</title>
+
+    <style type="text/css">
+        body{
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            font-size: 12px;
+        }
+
+        .iphone{
+            width: 340px;
+            height: 540px;
+            background-color: #fff;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin: -270px 0 0 -170px;
+        }
+
+
+    </style>
+
+    <script type="text/javascript" src="../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../js/H5ComponentBase.js"></script>
+    <script type="text/javascript" src="../js/H5ComponentRing.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/H5ComponentBase.css">
+    <link rel="stylesheet" type="text/css" href="../css/H5ComponentRing.css">
+
+
+   </head>
+    <body>
+        <!-- 用于开发测试饼图组件 -->
+        <div class="iphone">
+
+        </div>
+
+        <script type="text/javascript">
+        var cfg={
+          type:'ring',
+          width:400,
+          height:400,
+          data:[
+            ['A',.7],
+
+
+          ],
+          css:{
+            top:100,
+            opacity:0
+          },
+          animationIn:{opacity:1,top:200},
+          animationOut:{opacity:0,top:100},
+          center:true
+        };
+        var h5=new H5ComponentRing ('myBarcomponent',cfg);
+        $('.iphone').append(h5);
+        var leave=true;
+        $("body").on('click',function(){
+          leave=!leave;
+          $(".h5_component").trigger(leave?'onLeave':'afterLoad')
+        })
+        </script>
+
+    </body>
+
+</html>
